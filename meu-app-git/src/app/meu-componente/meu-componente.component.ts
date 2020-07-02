@@ -1,5 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
+
+interface GithubRes {
+  incomplete_results: boolean;
+  items: any[];
+  total_count: number;
+}
 
 @Component({
   selector: 'app-meu-componente',
@@ -16,11 +22,16 @@ export class MeuComponenteComponent implements OnInit {
 
   getProjects() {
     if (this.searchText) {
-      const url = `https://api.github.com/search/repositories?q=${this.searchText}`;
+      const url = `https://api.github.com/search/repositories`;
 
-      this.http.get(url).subscribe((response) => {
-        this.projects = response['items'];
-      });
+      const params = new HttpParams().set('q', this.searchText);
+      const headers = new HttpHeaders().set('Content-Type', 'Text/html');
+
+      this.http
+        .get<GithubRes>(url, { params, headers })
+        .subscribe((response) => {
+          this.projects = response.items;
+        });
     }
   }
 }
