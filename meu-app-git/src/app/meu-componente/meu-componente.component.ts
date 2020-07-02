@@ -1,37 +1,32 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-
-interface GithubRes {
-  incomplete_results: boolean;
-  items: any[];
-  total_count: number;
-}
+import { ProjectsService } from './../services/projects.service';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { takeWhile } from 'rxjs/operators';
 
 @Component({
   selector: 'app-meu-componente',
   templateUrl: './meu-componente.component.html',
   styleUrls: ['./meu-componente.component.css'],
 })
-export class MeuComponenteComponent implements OnInit {
+export class MeuComponenteComponent implements OnInit, OnDestroy {
   searchText = '';
   projects = [];
+  isAlive = true;
 
-  constructor(private http: HttpClient) {}
+  constructor(private projectsService: ProjectsService) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.projectsService.projects
+      .pipe(takeWhile(() => this.isAlive))
+      .subscribe((projects) => {
+        this.projects = projects;
+      });
+  }
+
+  ngOnDestroy() {
+    this.isAlive = false;
+  }
 
   getProjects() {
-    if (this.searchText) {
-      const url = `https://api.github.com/search/repositories`;
-
-      const params = new HttpParams().set('q', this.searchText);
-      const headers = new HttpHeaders().set('Content-Type', 'Text/html');
-
-      this.http
-        .get<GithubRes>(url, { params, headers })
-        .subscribe((response) => {
-          this.projects = response.items;
-        });
-    }
+    this.projectsService.getProjects(this.searchText);
   }
 }
